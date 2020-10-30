@@ -39,8 +39,7 @@ const getItems = function () {
   return listApiFetch(`${BASE_URL}`);
 };
 const createItem = function (name) {
-  const newItem = JSON.stringify({name});
-  console.log(newItem);
+  const newItem = JSON.stringify(name);
   return fetch(`${BASE_URL}`, {
     method: 'POST',
     headers: {
@@ -52,15 +51,27 @@ const createItem = function (name) {
 };
 //https://thinkful-list-api.herokuapp.com/luke/bookmarks/8sdfbvbs65sd
 const deleteItem = function (id) {
-  return listApiFetch(`${BASE_URL}/${id}`, {
+  return fetch(`${BASE_URL}/${id}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },
   });
 };
+const updateItem = function (id, updateData) {
+  const newData = JSON.stringify(updateData);
+  return listApiFetch(`${BASE_URL}/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    // REQ BODY: { "rating": 2 }
+    body: newData
+  });
+};
   
 export default {
+  updateItem,
   deleteItem,
   getItems,
   createItem

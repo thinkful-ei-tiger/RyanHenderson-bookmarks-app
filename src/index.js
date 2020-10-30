@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-
+import './addbookmark.css';
 import './index.css';
 import bookmarks from './bookmark';
 import api from './api';

@@ -10,11 +10,20 @@ $.fn.extend({
   }
 });
 const generateItemElement = function (item) {
-  let itemTitle = `${item.name}`;
-  return `
+  if(!item.checked){
+    return `
     <li class="js-item-element" data-item-id="${item.id}">
-      ${itemTitle} ${item.name.url} ${item.name.rating}
+      ${item.title}  ${item.rating}★
+      <div class ='linebreak'></div>
     </li>`;
+  }else{
+    return ` <li class="js-item-element" data-item-id="${item.id}">
+    ${item.title} <a href="${item.url}">${item.url}</a> ${item.rating}★ <br>
+    ${item.desc}
+    <input type="button" value="delete" class = 'js-item-delete'>
+    <div class ='linebreak'></div>
+  </li><br>`;
+  }
 };
 const handleNewItemSubmit = function () {
   $('.container').on('submit','#js-bookmarks-form',(function (event) {
@@ -24,8 +33,8 @@ const handleNewItemSubmit = function () {
       title:$('#bookmark-title').val(),
       url:$('#website-url').val(),
       rating:$('input[type=\'radio\'][name=\'rating\']:checked').val(),
-      description:$('[name="description"]').val()  };  
-      console.log(newItem) ;
+      desc:$('[name="description"]').val(),
+      checked:false  };  
     api.createItem(newItem)
       .then(res =>res.json())
       .then((myItem)=> {
@@ -34,7 +43,6 @@ const handleNewItemSubmit = function () {
       })
       .catch((error) => {
         store.setError(error.message);
-        console.log('hey there was an error');
         renderError();
       });
   }));
@@ -70,7 +78,9 @@ const mainPage = function(){
       <option value="4">4</option>
       <option value="5">5</option>
     </select>
+    <input type="button" value="filter" class='filter'>
   </div>
+  
 </div>
   <ul class="bookmarks">
   </ul>
@@ -85,19 +95,15 @@ const addBookmarkPage = function(){
       <input type="text" name="title" id="bookmark-title" required/><br>
       <label for="website url">Link:</label><br>
       <input type="text" name="url" id="website-url" required /><br>
-          <span class="star-rating">
-              <input type="radio" name="rating" value="1" required><i></i>
-              <input type="radio" name="rating" value="2"><i></i>
-              <input type="radio" name="rating" value="3"><i></i>
-              <input type="radio" name="rating" value="4"><i></i>
-              <input type="radio" name="rating" value="5"><i></i>
-              <input type="radio" name="rating" value="6"><i></i>
-              <input type="radio" name="rating" value="7"><i></i>
-              <input type="radio" name="rating" value="8"><i></i>
-              <input type="radio" name="rating" value="9"><i></i>
-              <input type="radio" name="rating" value="10"><i></i>
-            </span>
-      <textarea rows="4" cols="50" name="description" form="usrdescription">
+      <fieldset class="rating">
+      <legend>Rating:</legend>
+      <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="Rocks!">5 stars</label>
+      <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="Pretty good">4 stars</label>
+      <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="Meh">3 stars</label>
+      <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="Kinda bad">2 stars</label>
+      <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="Sucks">1 star</label>
+  </fieldset>
+      <textarea rows="4" cols="40" name="description" form="usrdescription">
               Enter a description...(optional)</textarea><br>
        <input type="button" value="cancel" class = 'mainPage'>
        <input type="submit" value="submit">
@@ -116,19 +122,33 @@ const handleCancelButton = function(){
     // store.adding=!store.adding;
     render();});
 };
+const handlefilterButton = function(){
+  $('.container').on('click', '.filter', event => {
+    store.filter = document.getElementById('filter').value;
+    render();});
+};
 
 const getItemIdFromElement = function (item) {
   return $(item)
     .closest('.js-item-element')
     .data('item-id');
 };
+const handleClickBookmark = function () {
+  $('.container').on('click', '.js-item-element', event => {
+    const id = getItemIdFromElement(event.currentTarget);
+    const item = store.findById(id);
+    store.findAndUpdate(id, { checked: !item.checked });
+    render();
+  });
+};
 const handleDeleteBookmark = function () {
   // like in `handleItemCheckClicked`, we use event delegation
-  $('.bookmarks').on('click', '.js-item-delete', event => {
+  $('.container').on('click', '.js-item-delete', event => {
     // get the index of the item in store.items
     const id = getItemIdFromElement(event.currentTarget);
+    console.log(`this is ${id}`);
     // delete the item
-    store.findAndDelete(id);
+    //store.findAndDelete(id);
     // render the updated shopping list
     api.deleteItem(id)
       .then(res => res.json())
@@ -143,23 +163,25 @@ const handleDeleteBookmark = function () {
       });
   });
 };
-const handleClickBookmark = function () {
-  $('.container').on('click', '.js-item-element', event => {
-    const id = getItemIdFromElement(event.currentTarget);
-    const item = store.findById(id);
-    api.updateItem(id, { checked: !item.checked })
-      .then(() => {
-        store.findAndUpdate(id, { checked: !item.checked });
-        render();
-      })
-      .catch((error) => {
-        console.log(error);
-        store.setError(error.message);
-        renderError();
-      });
-  });
-};
+// const handleClickBookmark = function () {
+//   $('.container').on('click', '.js-item-element', event => {
+//     const id = getItemIdFromElement(event.currentTarget);
+//     const item = store.findById(id);
+//     console.log(item);
+//     api.updateItem(id, { checked: !item.checked })
+//       .then(() => {
+//         store.findAndUpdate(id, { checked: !item.checked });
+//         render();
+//       })
+//       .catch((error) => {
+//         console.log(error);
+//         store.setError(error.message);
+//         renderError();
+//       });
+//   });
+// };
 const bindEventListener = function (){
+  handlefilterButton();
   handleClickBookmark();
   handleDeleteBookmark();
   handleAddBookmark();
@@ -181,9 +203,9 @@ const render = function () {
     // Filter item list if store prop is true by item.checked === false
     let items = [...store.bookmarks];
 
-    // if (store.filter) {
-    //   items = items.filter(item => item.rating <= store.filter);
-    // }
+    if (store.filter) {
+      items = items.filter(item => item.rating >= store.filter);
+    }
     // render the shopping list in the DOM
     const bookmarkString = generateBookmarkString(items);
   
