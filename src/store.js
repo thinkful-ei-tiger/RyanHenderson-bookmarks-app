@@ -1,5 +1,4 @@
 const bookmarks = [];
-let hideCheckedbookmarks = false;
 let error = null;
 let adding = false;
 let filter = document.getElementById('filter').value;
@@ -33,7 +32,6 @@ export default {
   error,
   adding,
   bookmarks,
-  hideCheckedbookmarks,
   findById,
   addItem,
   findAndUpdate,

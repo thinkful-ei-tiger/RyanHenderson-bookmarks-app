@@ -1,4 +1,5 @@
-const BASE_URL = 'https://thinkful-list-api.herokuapp.com/RyanH/items';
+const BASE_URL = 'https://thinkful-list-api.herokuapp.com/RyanH/bookmarks';
+
 
 const listApiFetch = function (...args) {
   // setup var in scope outside of promise chain
@@ -38,9 +39,9 @@ const getItems = function () {
   return listApiFetch(`${BASE_URL}`);
 };
 const createItem = function (name) {
-  const newItem = JSON.stringify({ name });
-  
-  return listApiFetch(`${BASE_URL}`, {
+  const newItem = JSON.stringify({name});
+  console.log(newItem);
+  return fetch(`${BASE_URL}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -49,8 +50,18 @@ const createItem = function (name) {
     body: newItem
   });
 };
+//https://thinkful-list-api.herokuapp.com/luke/bookmarks/8sdfbvbs65sd
+const deleteItem = function (id) {
+  return listApiFetch(`${BASE_URL}/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
   
 export default {
+  deleteItem,
   getItems,
   createItem
 };

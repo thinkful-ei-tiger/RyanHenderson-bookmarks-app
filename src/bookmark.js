@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import api from './api';
 import store from './store';
-
 $.fn.extend({
   serializeJson: function() {
     const formData = new FormData(this[0]);
@@ -11,7 +10,7 @@ $.fn.extend({
   }
 });
 const generateItemElement = function (item) {
-  let itemTitle = `${item.name.title}`;
+  let itemTitle = `${item.name}`;
   return `
     <li class="js-item-element" data-item-id="${item.id}">
       ${itemTitle} ${item.name.url} ${item.name.rating}
@@ -25,7 +24,8 @@ const handleNewItemSubmit = function () {
       title:$('#bookmark-title').val(),
       url:$('#website-url').val(),
       rating:$('input[type=\'radio\'][name=\'rating\']:checked').val(),
-      description:$('[name="description"]').val()  };   
+      description:$('[name="description"]').val()  };  
+      console.log(newItem) ;
     api.createItem(newItem)
       .then(res =>res.json())
       .then((myItem)=> {
@@ -64,10 +64,12 @@ const mainPage = function(){
   <div>
       <label for="filter">Filter by:</label>
       <select id="filter" name="filterlist" form="filterform">
-        <option value="none">None</option>
-        <option value="name">Name</option>
-        <option value="rating">Rating</option>
-      </select>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
   </div>
 </div>
   <ul class="bookmarks">
@@ -114,7 +116,52 @@ const handleCancelButton = function(){
     // store.adding=!store.adding;
     render();});
 };
+
+const getItemIdFromElement = function (item) {
+  return $(item)
+    .closest('.js-item-element')
+    .data('item-id');
+};
+const handleDeleteBookmark = function () {
+  // like in `handleItemCheckClicked`, we use event delegation
+  $('.bookmarks').on('click', '.js-item-delete', event => {
+    // get the index of the item in store.items
+    const id = getItemIdFromElement(event.currentTarget);
+    // delete the item
+    store.findAndDelete(id);
+    // render the updated shopping list
+    api.deleteItem(id)
+      .then(res => res.json())
+      .then(() => {
+        store.findAndDelete(id);
+        render();
+      })
+      .catch((error) => {
+        console.log(error);
+        store.setError(error.message);
+        renderError();
+      });
+  });
+};
+const handleClickBookmark = function () {
+  $('.container').on('click', '.js-item-element', event => {
+    const id = getItemIdFromElement(event.currentTarget);
+    const item = store.findById(id);
+    api.updateItem(id, { checked: !item.checked })
+      .then(() => {
+        store.findAndUpdate(id, { checked: !item.checked });
+        render();
+      })
+      .catch((error) => {
+        console.log(error);
+        store.setError(error.message);
+        renderError();
+      });
+  });
+};
 const bindEventListener = function (){
+  handleClickBookmark();
+  handleDeleteBookmark();
   handleAddBookmark();
   handleCancelButton();
   handleNewItemSubmit();
@@ -135,7 +182,7 @@ const render = function () {
     let items = [...store.bookmarks];
 
     // if (store.filter) {
-    //   items = items.filter(item => item.rating >= store.filter);
+    //   items = items.filter(item => item.rating <= store.filter);
     // }
     // render the shopping list in the DOM
     const bookmarkString = generateBookmarkString(items);
