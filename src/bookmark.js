@@ -71,7 +71,7 @@ const mainPage = function(){
       <input type="button" value="add bookmark" class='AddBookmark'>
   <div>
       <label for="filter">Filter by:</label>
-      <select id="filter" name="filterlist">
+      <select id="filter" name="filterlist" form="filterform">
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3">3</option>
