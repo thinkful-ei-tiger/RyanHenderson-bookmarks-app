@@ -28,7 +28,6 @@ const generateItemElement = function (item) {
 const handleNewItemSubmit = function () {
   $('.container').on('submit','#js-bookmarks-form',(function (event) {
     event.preventDefault();
-    // const newItemName = $(event.target).serializeJson();
     const newItem ={
       title:$('#bookmark-title').val(),
       url:$('#website-url').val(),
@@ -36,14 +35,22 @@ const handleNewItemSubmit = function () {
       desc:$('[name="description"]').val(),
       checked:false  };  
     api.createItem(newItem)
-      .then(res =>res.json())
+    
+      .then(res =>{
+        if(res.ok){
+          return res.json();
+        }
+        throw new Error(res.statusText);
+      })
       .then((myItem)=> {
+        store.toggleStoreAdding();
         store.addItem(myItem);
         render();
       })
       .catch((error) => {
+        store.toggleStoreAdding();
         store.setError(error.message);
-        renderError();
+        render();
       });
   }));
 };
@@ -59,17 +66,15 @@ const generateError = function (message) {
 const renderError = function () {
   if (store.error) {
     const el = generateError(store.error);
-    $('.error-container').html(el);
-  } else {
-    $('.error-container').empty();
+    return el;
+  }else{
+    return '';
   }
 };
 const mainPage = function(){
-  const mainPage = `    <h1>Bookmarks app</h1>
-  <div class ="error-container"></div>
+  const mainPage = `   <header> <h1>Bookmarks app</h1></header>
   <div class="ui">
       <input type="button" value="add bookmark" class='AddBookmark'>
-  <div>
       <label for="filter">Filter by:</label>
       <select id="filter" name="filterlist">
       <option value="1">1</option>
@@ -79,17 +84,14 @@ const mainPage = function(){
       <option value="5">5</option>
     </select>
     <input type="button" value="filter" class='filter'>
-  </div>
-  
 </div>
   <ul class="bookmarks">
   </ul>
-</div>`;
+`;
   return mainPage;
 };
 const addBookmarkPage = function(){
   const addPage =`    <h1>Bookmarks app</h1>
-  <div class ="error-container"></div>
   <form id="js-bookmarks-form">
       <label for="bookmark-title">Add new bookmark:</label><br>
       <input type="text" name="title" id="bookmark-title" required/><br>
@@ -97,14 +99,13 @@ const addBookmarkPage = function(){
       <input type="text" name="url" id="website-url" required /><br>
       <fieldset class="rating">
       <legend>Rating:</legend>
-      <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="Rocks!">5 stars</label>
-      <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="Pretty good">4 stars</label>
+      <input type="radio" id="star5" name="rating" value="5" /><label for="star1" title="Sucks">1 stars</label>
+      <input type="radio" id="star4" name="rating" value="4" /><label for="star2" title="Kinda bad">2 stars</label>
       <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="Meh">3 stars</label>
-      <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="Kinda bad">2 stars</label>
-      <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="Sucks">1 star</label>
+      <input type="radio" id="star2" name="rating" value="2" /><label for="star4" title="Kinda good">4 stars</label>
+      <input type="radio" id="star1" name="rating" value="1" /><label for="star5" title="Rocks!">5 star</label>
   </fieldset>
-      <textarea rows="4" cols="40" name="description" form="usrdescription">
-              Enter a description...(optional)</textarea><br>
+      <textarea rows="4" cols="40" name="description" placeholder="Enter a description...(optional)"></textarea><br>
        <input type="button" value="cancel" class = 'mainPage'>
        <input type="submit" value="submit">
 
@@ -113,13 +114,13 @@ const addBookmarkPage = function(){
 };
 const handleAddBookmark = function (){
   $('.container').on('click', '.AddBookmark', event => {
-    store.adding=!store.adding;
+    store.toggleStoreAdding();
     render();});
 };
 
 const handleCancelButton = function(){
   $('.container').on('click', '.mainPage', event => {
-    // store.adding=!store.adding;
+    store.toggleStoreAdding();
     render();});
 };
 const handlefilterButton = function(){
@@ -146,41 +147,34 @@ const handleDeleteBookmark = function () {
   $('.container').on('click', '.js-item-delete', event => {
     // get the index of the item in store.items
     const id = getItemIdFromElement(event.currentTarget);
-    console.log(`this is ${id}`);
     // delete the item
-    //store.findAndDelete(id);
     // render the updated shopping list
     api.deleteItem(id)
-      .then(res => res.json())
+      .then(res =>{
+        if(res.ok){
+          return res.json();
+        }
+        throw new Error(res.statusText);
+      })
       .then(() => {
         store.findAndDelete(id);
         render();
       })
       .catch((error) => {
-        console.log(error);
         store.setError(error.message);
-        renderError();
+        render();
       });
   });
 };
-// const handleClickBookmark = function () {
-//   $('.container').on('click', '.js-item-element', event => {
-//     const id = getItemIdFromElement(event.currentTarget);
-//     const item = store.findById(id);
-//     console.log(item);
-//     api.updateItem(id, { checked: !item.checked })
-//       .then(() => {
-//         store.findAndUpdate(id, { checked: !item.checked });
-//         render();
-//       })
-//       .catch((error) => {
-//         console.log(error);
-//         store.setError(error.message);
-//         renderError();
-//       });
-//   });
-// };
+
+const handleErrorButton = function (){
+  $('.container').on('click', '#cancel-error', event => {
+    store.error = null;
+    render();
+  });
+};
 const bindEventListener = function (){
+  handleErrorButton();
   handlefilterButton();
   handleClickBookmark();
   handleDeleteBookmark();
@@ -194,23 +188,23 @@ const generateBookmarkString = function (bookmarks) {
 };
 const render = function () {
   renderError();
-  store.error=false;
   if(store.adding){
     addBookmarkPage();
-    store.adding=!store.adding;
   }else{
-    $('.container').html(mainPage());
+    $('.container').html(`${renderError()} ${mainPage()}`);
     // Filter item list if store prop is true by item.checked === false
     let items = [...store.bookmarks];
-
     if (store.filter) {
       items = items.filter(item => item.rating >= store.filter);
     }
+
     // render the shopping list in the DOM
     const bookmarkString = generateBookmarkString(items);
   
     // insert that HTML into the DOM
     $('.bookmarks').html(bookmarkString);
+
+    
   }
 };
 

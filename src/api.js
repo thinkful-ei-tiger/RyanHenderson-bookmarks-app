@@ -60,7 +60,7 @@ const deleteItem = function (id) {
 };
 const updateItem = function (id, updateData) {
   const newData = JSON.stringify(updateData);
-  return listApiFetch(`${BASE_URL}/${id}`, {
+  return fetch(`${BASE_URL}/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
