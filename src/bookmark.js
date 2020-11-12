@@ -48,7 +48,6 @@ const handleNewItemSubmit = function () {
         render();
       })
       .catch((error) => {
-        store.toggleStoreAdding();
         store.setError(error.message);
         render();
       });
@@ -56,23 +55,22 @@ const handleNewItemSubmit = function () {
 };
 const generateError = function (message) {
   return `
-        <section class="error-content">
           <button id="cancel-error">X</button>
           <p>${message}</p>
-        </section>
       `;
 };
   
 const renderError = function () {
   if (store.error) {
     const el = generateError(store.error);
-    return el;
+    $('.error-content').html(el);
   }else{
-    return '';
+    $('.error-content').empty();
   }
 };
 const mainPage = function(){
   const mainPage = `   <header> <h1>Bookmarks app</h1></header>
+  <section class="error-content"></section>
   <div class="ui">
       <input type="button" value="add bookmark" class='AddBookmark'>
       <label for="filter">Filter by:</label>
@@ -92,6 +90,7 @@ const mainPage = function(){
 };
 const addBookmarkPage = function(){
   const addPage =`    <h1>Bookmarks app</h1>
+  <section class="error-content"></section>
   <form id="js-bookmarks-form">
       <label for="bookmark-title">Add new bookmark:</label><br>
       <input type="text" name="title" id="bookmark-title" required/><br>
@@ -110,7 +109,7 @@ const addBookmarkPage = function(){
        <input type="submit" value="submit">
 
   </form>`;
-  $('.container').html(addPage);
+  $('.container').html(`${addPage}`);
 };
 const handleAddBookmark = function (){
   $('.container').on('click', '.AddBookmark', event => {
@@ -187,11 +186,12 @@ const generateBookmarkString = function (bookmarks) {
   return items.join('');
 };
 const render = function () {
-  renderError();
   if(store.adding){
     addBookmarkPage();
+    renderError();
   }else{
-    $('.container').html(`${renderError()} ${mainPage()}`);
+    $('.container').html(`${mainPage()}`);
+    renderError();
     // Filter item list if store prop is true by item.checked === false
     let items = [...store.bookmarks];
     if (store.filter) {
